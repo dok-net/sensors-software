@@ -2753,7 +2753,11 @@ void HandleOTA() {
 void setup() {
 	Serial.begin(9600);					// Output to Serial at 9600 baud
 #if defined(ESP8266)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
 	Wire.begin(D2, D1);
+#else
+	Wire.begin(D3, D4);
+#endif
 	esp_chipid = String(ESP.getChipId());
 	WiFi.persistent(false);
 #endif
