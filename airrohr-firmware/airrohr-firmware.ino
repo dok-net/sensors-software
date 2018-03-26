@@ -87,8 +87,10 @@
 #include <base64.h>
 #include <Wire.h>
 #include <ESP8266HTTPClient.h>
-#include <ArduinoOTA.h>
 #include <Adafruit_SSD1306.h>
+#endif
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#include <ArduinoOTA.h>
 #endif
 #if defined(ARDUINO_SAMD_ZERO)
 #include <RHReliableDatagram.h>
@@ -2706,7 +2708,7 @@ bool initBME280(char addr) {
 	}
 }
 
-#if defined(ESP8266)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
 bool ota_started = false;
 
 void StartOTAIfRequired() {
@@ -2788,8 +2790,10 @@ void setup() {
 	htu21d.begin(); // Start HTU21D
 #endif
 	delay(10);
-#if defined(ESP8266)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
 	StartOTAIfRequired();
+#endif
+#if defined(ESP8266)
 	debug_out(F("\nChipId: "), DEBUG_MIN_INFO, 0);
 	debug_out(esp_chipid, DEBUG_MIN_INFO, 1);
 #endif
@@ -3205,7 +3209,7 @@ void loop() {
 
 	if (config_needs_write) { writeConfig(); create_basic_auth_strings(); }
 
-#if defined(ESP8266)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
 	HandleOTA();
 #endif
 }
