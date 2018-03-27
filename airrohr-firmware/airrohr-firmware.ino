@@ -578,14 +578,18 @@ String SDS_version_date() {
 	debug_out(F("Start fetch SDS011 version date"), DEBUG_MED_INFO, 1);
 
 	String version_date;
-	String device_id;
+	uint16_t device_id;
 	String s;
 	if (sds011.device_info(version_date, device_id)) {
-		s = version_date + "(" + device_id + ")";
+		uint8_t device_id_msb = device_id >> 8;
+		String device_id_str = (device_id_msb < 0x10) ? String("0") + String(device_id_msb, HEX) : String(device_id_msb, HEX);
+		device_id &= 0xff;
+		device_id_str += (device_id < 0x10) ? String("0") + String(device_id, HEX) : String(device_id, HEX);
+		s = version_date + "(" + device_id_str + ")";
 		debug_out(F("SDS version date : "), DEBUG_MIN_INFO, 0);
 		debug_out(version_date, DEBUG_MIN_INFO, 1);
 		debug_out(F("SDS device ID:     "), DEBUG_MIN_INFO, 0);
-		debug_out(device_id, DEBUG_MIN_INFO, 1);
+		debug_out(device_id_str, DEBUG_MIN_INFO, 1);
 	}
 
 	debug_out(F("End fetch SDS011 version date"), DEBUG_MED_INFO, 1);
@@ -2624,7 +2628,7 @@ void display_values(const String& value_DHT_T, const String& value_DHT_H, const 
 #endif
 		display.display();
 	}
-	
+
 // ----5----0----5----0
 // PM10/2.5: 1999/999
 // T/H: -10.0°C/100.0%
