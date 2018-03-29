@@ -598,18 +598,6 @@ String SDS_version_date() {
 }
 
 /*****************************************************************
-/* read SDS011 sensor values                                     *
-/*****************************************************************/
-bool SDS_sensor_values(int& pm25_serial, int& pm10_serial) {
-	debug_out(F("Start reading SDS011"), DEBUG_MED_INFO, 1);
-
-	bool msg_ok = sds011.query_data_auto(pm25_serial, pm10_serial);
-
-	debug_out(F("End reading SDS011"), DEBUG_MED_INFO, 1);
-	return msg_ok;
-}
-
-/*****************************************************************
 /* start Plantower PMS sensor                                    *
 /*****************************************************************/
 void start_PMS() {
@@ -2149,22 +2137,6 @@ String sensorSDS() {
 			start_SDS();
 			if (!--retry) { break; }
 		}
-		int pm10_serial;
-		int pm25_serial;
-		if (SDS_sensor_values(pm25_serial, pm10_serial) &&
-				long(act_milli - starttime) > (long(sending_intervall_ms) - long(reading_time_SDS_ms))) {
-			if ((!isnan(pm10_serial)) && (!isnan(pm25_serial))) {
-				sds_pm10_sum += pm10_serial;
-				sds_pm25_sum += pm25_serial;
-				if (sds_pm10_min > pm10_serial) { sds_pm10_min = pm10_serial; }
-				if (sds_pm10_max < pm10_serial) { sds_pm10_max = pm10_serial; }
-				if (sds_pm25_min > pm25_serial) { sds_pm25_min = pm25_serial; }
-				if (sds_pm25_max < pm25_serial) { sds_pm25_max = pm25_serial; }
-				debug_out(F("PM10 (sec.) : "), DEBUG_MED_INFO, 0); debug_out(Float2String(float(pm10_serial) / 10), DEBUG_MED_INFO, 1);
-				debug_out(F("PM2.5 (sec.): "), DEBUG_MED_INFO, 0); debug_out(Float2String(float(pm25_serial) / 10), DEBUG_MED_INFO, 1);
-				sds_val_count++;
-			}
-		}
 	}
 	if (send_now) {
 		last_value_SDS_P1 = "";
@@ -2858,6 +2830,21 @@ void setup() {
 			stop_SDS();
 			if (!--retry) { break; }
 		}
+		sds011.on_query_data_auto([](int pm25_serial, int pm10_serial) {
+			debug_out(F("Handling SDS011 data"), DEBUG_MED_INFO, 1);
+			if ((!isnan(pm10_serial)) && (!isnan(pm25_serial))) {
+				sds_pm10_sum += pm10_serial;
+				sds_pm25_sum += pm25_serial;
+				if (sds_pm10_min > pm10_serial) { sds_pm10_min = pm10_serial; }
+				if (sds_pm10_max < pm10_serial) { sds_pm10_max = pm10_serial; }
+				if (sds_pm25_min > pm25_serial) { sds_pm25_min = pm25_serial; }
+				if (sds_pm25_max < pm25_serial) { sds_pm25_max = pm25_serial; }
+				debug_out(F("PM10 (sec.) : "), DEBUG_MED_INFO, 0); debug_out(Float2String(float(pm10_serial) / 10), DEBUG_MED_INFO, 1);
+				debug_out(F("PM2.5 (sec.): "), DEBUG_MED_INFO, 0); debug_out(Float2String(float(pm25_serial) / 10), DEBUG_MED_INFO, 1);
+				sds_val_count++;
+			}
+			debug_out(F("End handling SDS011 data"), DEBUG_MED_INFO, 1);
+		});
 	}
 	if (pms24_read || pms32_read) {
 		debug_out(F("Stoppe PMS..."), DEBUG_MIN_INFO, 1);
@@ -3212,6 +3199,8 @@ void loop() {
 	}
 
 	if (config_needs_write) { writeConfig(); create_basic_auth_strings(); }
+
+	serialSDS.perform_work();
 
 #if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
 	HandleOTA();
