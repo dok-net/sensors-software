@@ -332,7 +332,6 @@ long wifi_reconnect_deadline = -1;
 
 unsigned long last_update_attempt;
 const unsigned long pause_between_update_attempts = 86400000;
-bool will_check_for_update = false;
 
 int sds_pm10_sum = 0;
 int sds_pm25_sum = 0;
@@ -2159,7 +2158,7 @@ String sensorSDS() {
 		}
 		sds_pm10_sum = 0; sds_pm25_sum = 0; sds_val_count = 0;
 		sds_pm10_max = 0; sds_pm10_min = 20000; sds_pm25_max = 0; sds_pm25_min = 20000;
-		if ((sending_intervall_ms > (warmup_time_SDS_ms + reading_time_SDS_ms)) && (!will_check_for_update)) {
+		if ((sending_intervall_ms > (warmup_time_SDS_ms + reading_time_SDS_ms))) {
 			int retry = 3;
 			while (is_SDS_running) {
 				stop_SDS();
@@ -2291,7 +2290,7 @@ String sensorPMS(int msg_len) {
 		}
 		pms_pm1_sum = 0; pms_pm10_sum = 0; pms_pm25_sum = 0; pms_val_count = 0;
 		pms_pm1_max = 0; pms_pm1_min = 20000; pms_pm10_max = 0; pms_pm10_min = 20000; pms_pm25_max = 0; pms_pm25_min = 20000;
-		if ((sending_intervall_ms > (warmup_time_SDS_ms + reading_time_SDS_ms)) && (! will_check_for_update)) {
+		if ((sending_intervall_ms > (warmup_time_SDS_ms + reading_time_SDS_ms))) {
 			stop_PMS();
 		}
 	}
@@ -2509,7 +2508,6 @@ void autoUpdate() {
 			break;
 		}
 	}
-	will_check_for_update = false;
 #endif
 }
 
@@ -3111,10 +3109,6 @@ void loop() {
 		data += "]}";
 
 		//sending to api(s)
-
-		if ((act_milli - last_update_attempt) > pause_between_update_attempts) {
-			will_check_for_update = true;
-		}
 
 		if (has_display || has_lcd1602 || has_lcd1602_27) {
 			display_values(last_value_DHT_T, last_value_DHT_H, last_value_BMP_T, last_value_BMP_P, last_value_BMP280_T, last_value_BMP280_P, last_value_BME280_T, last_value_BME280_H, last_value_BME280_P, last_value_PPD_P1, last_value_PPD_P2, last_value_SDS_P1, last_value_SDS_P2);
