@@ -234,7 +234,7 @@ LiquidCrystal_I2C lcd_3f(0x3F, 16, 2);
 #if defined(ESP8266)
 SoftwareSerial serialSDS(SDS_PIN_RX, SDS_PIN_TX, false, 128);
 SoftwareSerial serialGPS(GPS_PIN_RX, GPS_PIN_TX, false, 128);
-Sds011 sds011(serialSDS);
+Sds011< SoftwareSerial > sds011(serialSDS);
 #endif
 #if defined(ARDUINO_SAMD_ZERO)
 #define serialSDS SERIAL_PORT_HARDWARE
