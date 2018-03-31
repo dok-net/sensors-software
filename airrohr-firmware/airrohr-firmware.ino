@@ -312,14 +312,10 @@ unsigned long diff_micro = 0;
 const unsigned long sampletime_ms = 30000;
 
 const unsigned long sampletime_SDS_ms = 1000;
-const unsigned long warmup_time_SDS_ms = 15000;
+const unsigned long warmup_time_SDS_ms = 30000;
 const unsigned long reading_time_SDS_ms = 5000;
-// const unsigned long reading_time_SDS_ms = 60000;
 bool is_SDS_running = true;
 bool is_PMS_running = true;
-
-const unsigned long display_update_interval = 5000;
-unsigned long display_last_update;
 
 const unsigned long sampletime_GPS_ms = 50;
 
