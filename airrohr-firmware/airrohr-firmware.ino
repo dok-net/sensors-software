@@ -234,7 +234,7 @@ LiquidCrystal_I2C lcd_3f(0x3F, 16, 2);
 #if defined(ESP8266)
 SoftwareSerial serialSDS(SDS_PIN_RX, SDS_PIN_TX, false, 128);
 SoftwareSerial serialGPS(GPS_PIN_RX, GPS_PIN_TX, false, 128);
-Sds011< SoftwareSerial > sds011(serialSDS);
+Sds011Async< SoftwareSerial > sds011(serialSDS);
 #endif
 #if defined(ARDUINO_SAMD_ZERO)
 #define serialSDS SERIAL_PORT_HARDWARE
@@ -590,6 +590,15 @@ String SDS_version_date() {
 	debug_out(F("End fetch SDS011 version date"), DEBUG_MED_INFO, 1);
 
 	return s;
+}
+
+/*****************************************************************
+/* set continuous mode SDS011 sensor                             *
+/*****************************************************************/
+bool continuous_mode_SDS() {
+	Sds011::Report_mode report_mode;
+	if (!sds011.get_data_reporting_mode(report_mode)) { return false; }
+	return sds011.REPORT_ACTIVE == report_mode || sds011.set_data_reporting_mode(sds011.REPORT_ACTIVE);
 }
 
 /*****************************************************************
@@ -2818,8 +2827,12 @@ void setup() {
 		bme280_init_failed = 1;
 	}
 	if (sds_read) {
-		debug_out(F("Stoppe SDS011..."), DEBUG_MIN_INFO, 1);
 		int retry = 3;
+		while (!continuous_mode_SDS()) {
+			if (!--retry) { break; }
+		}
+		debug_out(F("Stoppe SDS011..."), DEBUG_MIN_INFO, 1);
+		retry = 3;
 		while (is_SDS_running) {
 			stop_SDS();
 			if (!--retry) { break; }
