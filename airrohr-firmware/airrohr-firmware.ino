@@ -598,7 +598,7 @@ String SDS_version_date() {
 bool continuous_mode_SDS() {
 	Sds011::Report_mode report_mode;
 	if (!sds011.get_data_reporting_mode(report_mode)) { return false; }
-	return sds011.REPORT_ACTIVE == report_mode || sds011.set_data_reporting_mode(sds011.REPORT_ACTIVE);
+	return Sds011::REPORT_ACTIVE == report_mode || sds011.set_data_reporting_mode(Sds011::REPORT_ACTIVE);
 }
 
 /*****************************************************************
@@ -622,7 +622,7 @@ void stop_PMS() {
 /*****************************************************************/
 void copyExtDef() {
 
-#define strcpyDef(var, def) if (def != NULL) { strcpy(var, def); }
+#define strcpyDef(var, def) if (def != 0) { strcpy(var, def); }
 #define setDef(var, def)    if (def != var) { var = def; }
 
 	strcpyDef(current_lang, CURRENT_LANG);
@@ -2732,11 +2732,12 @@ void HandleOTA() {
 /* The Setup                                                     *
 /*****************************************************************/
 void setup() {
-	Serial.begin(9600);					// Output to Serial at 9600 baud
 #if defined(ESP8266)
 #if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
-	Wire.begin(D2, D1);
+	Wire.begin(SDA, SCL);
+	Serial.begin(115200);				// Output to Serial at 115200 baud
 #else
+	Serial.begin(9600);					// Output to Serial at 9600 baud
 	Wire.begin(D3, D4);
 #endif
 	esp_chipid = String(ESP.getChipId());
