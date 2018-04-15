@@ -319,7 +319,7 @@ bool is_PMS_running = true;
 
 const unsigned long sampletime_GPS_ms = 50;
 
-unsigned long sending_intervall_ms = 145000;
+unsigned long sending_interval_ms = 145000;
 unsigned long sending_time = 0;
 bool send_failed = false;
 
@@ -735,7 +735,7 @@ void readConfig() {
 					setFromJSON(has_lcd1602);
 					setFromJSON(has_lcd1602_27);
 					setFromJSON(debug);
-					setFromJSON(sending_intervall_ms);
+					setFromJSON(sending_interval_ms);
 					setFromJSON(time_for_wifi_config);
 					strcpyFromJSON(senseboxid);
 					setFromJSON(send2custom);
@@ -805,7 +805,7 @@ void writeConfig() {
 	copyToJSON_Bool(has_lcd1602);
 	copyToJSON_Bool(has_lcd1602_27);
 	copyToJSON_String(debug);
-	copyToJSON_String(sending_intervall_ms);
+	copyToJSON_String(sending_interval_ms);
 	copyToJSON_String(time_for_wifi_config);
 	copyToJSON_String(senseboxid);
 	copyToJSON_Bool(send2custom);
@@ -989,8 +989,8 @@ String wlan_ssid_to_table_row(const String& ssid, const String& encryption, cons
 
 String warning_first_cycle() {
 	String s = FPSTR(INTL_ERSTER_MESSZYKLUS);
-	unsigned long time_to_first = sending_intervall_ms - (act_milli - starttime);
-	if ((time_to_first > sending_intervall_ms) || (time_to_first < 0)) { time_to_first = 0; }
+	unsigned long time_to_first = sending_interval_ms - (act_milli - starttime);
+	if ((time_to_first > sending_interval_ms) || (time_to_first < 0)) { time_to_first = 0; }
 	s.replace("{v}", String((long)((time_to_first + 500) / 1000)));
 	return s;
 }
@@ -998,7 +998,7 @@ String warning_first_cycle() {
 String age_last_values() {
 	String s = "<b>";
 	unsigned long time_since_last = act_milli - starttime;
-	if ((time_since_last > sending_intervall_ms) || (time_since_last < 0)) { time_since_last = 0; }
+	if ((time_since_last > sending_interval_ms) || (time_since_last < 0)) { time_since_last = 0; }
 	s += String((long)((time_since_last + 500) / 1000));
 	s += FPSTR(INTL_ZEIT_SEIT_LETZTER_MESSUNG);
 	s += F("</b><br/><br/>");
@@ -1110,7 +1110,7 @@ void webserver_config() {
 		page_content += F("<table>");
 		page_content += form_select_lang();
 		page_content += form_input("debug", FPSTR(INTL_DEBUG_LEVEL), String(debug), 5);
-		page_content += form_input("sending_intervall_ms", FPSTR(INTL_MESSINTERVALL), String(sending_intervall_ms / 1000), 5);
+		page_content += form_input("sending_interval_ms", FPSTR(INTL_MESSINTERVALL), String(sending_interval_ms / 1000), 5);
 		page_content += form_input("time_for_wifi_config", FPSTR(INTL_DAUER_ROUTERMODUS), String(time_for_wifi_config / 1000), 5);
 		page_content += F("</table><br/><b>"); page_content += FPSTR(INTL_WEITERE_APIS); page_content += F("</b><br/><br/>");
 		page_content += form_checkbox("send2sensemap", tmpl(FPSTR(INTL_SENDEN_AN), F("OpenSenseMap")), send2sensemap);
@@ -1173,7 +1173,7 @@ void webserver_config() {
 		readBoolParam(has_lcd1602);
 		readBoolParam(has_lcd1602_27);
 		readIntParam(debug);
-		readTimeParam(sending_intervall_ms);
+		readTimeParam(sending_interval_ms);
 		readTimeParam(time_for_wifi_config);
 
 		readCharParam(senseboxid);
@@ -1216,7 +1216,7 @@ void webserver_config() {
 		page_content += line_from_value(FPSTR(INTL_LCD1602_27), String(has_lcd1602_27));
 		page_content += line_from_value(FPSTR(INTL_LCD1602_3F), String(has_lcd1602));
 		page_content += line_from_value(FPSTR(INTL_DEBUG_LEVEL), String(debug));
-		page_content += line_from_value(FPSTR(INTL_MESSINTERVALL), String(sending_intervall_ms));
+		page_content += line_from_value(FPSTR(INTL_MESSINTERVALL), String(sending_interval_ms));
 		page_content += line_from_value(tmpl(FPSTR(INTL_SENDEN_AN), "opensensemap"), String(send2sensemap));
 		page_content += F("<br/>senseBox-ID "); page_content += senseboxid;
 		page_content += F("<br/><br/>Eigene API: "); page_content += String(send2custom);
@@ -2129,7 +2129,7 @@ String sensorDS18B20() {
 String sensorSDS() {
 	String s = "";
 
-	if (long(act_milli - starttime) < (long(sending_intervall_ms) - long(warmup_time_SDS_ms + reading_time_SDS_ms))) {
+	if (long(act_milli - starttime) < (long(sending_interval_ms) - long(warmup_time_SDS_ms + reading_time_SDS_ms))) {
 		int retry = 3;
 		while (is_SDS_running) {
 			stop_SDS();
@@ -2163,7 +2163,7 @@ String sensorSDS() {
 		}
 		sds_pm10_sum = 0; sds_pm25_sum = 0; sds_val_count = 0;
 		sds_pm10_max = 0; sds_pm10_min = 20000; sds_pm25_max = 0; sds_pm25_min = 20000;
-		if ((sending_intervall_ms > (warmup_time_SDS_ms + reading_time_SDS_ms))) {
+		if ((sending_interval_ms > (warmup_time_SDS_ms + reading_time_SDS_ms))) {
 			int retry = 3;
 			while (is_SDS_running) {
 				stop_SDS();
@@ -2193,7 +2193,7 @@ String sensorPMS(int msg_len) {
 	int position = 0;
 
 	debug_out(F("Start reading PMS"), DEBUG_MED_INFO, 1);
-	if (long(act_milli - starttime) < (long(sending_intervall_ms) - long(warmup_time_SDS_ms + reading_time_SDS_ms))) {
+	if (long(act_milli - starttime) < (long(sending_interval_ms) - long(warmup_time_SDS_ms + reading_time_SDS_ms))) {
 		if (is_PMS_running) {
 			stop_PMS();
 		}
@@ -2247,7 +2247,7 @@ String sensorPMS(int msg_len) {
 				debug_out(F(" - should: "), DEBUG_MED_INFO, 0); debug_out(String(checksum_should), DEBUG_MED_INFO, 1);
 				if (checksum_should == (checksum_is + 143)) { checksum_ok = 1; } else { len = 0; };
 			}
-			if (len == msg_len && checksum_ok == 1 && (long(act_milli - starttime) > (long(sending_intervall_ms) - long(reading_time_SDS_ms)))) {
+			if (len == msg_len && checksum_ok == 1 && (long(act_milli - starttime) > (long(sending_interval_ms) - long(reading_time_SDS_ms)))) {
 				if ((! isnan(pm1_serial)) && (! isnan(pm10_serial)) && (! isnan(pm25_serial))) {
 					pms_pm1_sum += pm1_serial;
 					pms_pm10_sum += pm10_serial;
@@ -2295,7 +2295,7 @@ String sensorPMS(int msg_len) {
 		}
 		pms_pm1_sum = 0; pms_pm10_sum = 0; pms_pm25_sum = 0; pms_val_count = 0;
 		pms_pm1_max = 0; pms_pm1_min = 20000; pms_pm10_max = 0; pms_pm10_min = 20000; pms_pm25_max = 0; pms_pm25_min = 20000;
-		if ((sending_intervall_ms > (warmup_time_SDS_ms + reading_time_SDS_ms))) {
+		if ((sending_interval_ms > (warmup_time_SDS_ms + reading_time_SDS_ms))) {
 			stop_PMS();
 		}
 	}
@@ -2908,7 +2908,7 @@ void loop() {
 
 	act_micro = micros();
 	act_milli = millis();
-	send_now = (act_milli - starttime) > sending_intervall_ms;
+	send_now = (act_milli - starttime) > sending_interval_ms;
 
 	sample_count++;
 
@@ -2929,7 +2929,7 @@ void loop() {
 	}
 
 
-	if (((act_milli - starttime_SDS) > sampletime_SDS_ms) || ((act_milli - starttime) > sending_intervall_ms)) {
+	if (((act_milli - starttime_SDS) > sampletime_SDS_ms) || ((act_milli - starttime) > sending_interval_ms)) {
 		if (sds_read) {
 			debug_out(F("Call sensorSDS"), DEBUG_MAX_INFO, 1);
 			result_SDS = sensorSDS();
@@ -2988,7 +2988,7 @@ void loop() {
 	}
 
 #if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
-	if (gps_read && (((act_milli - starttime_GPS) > sampletime_GPS_ms) || ((act_milli - starttime) > sending_intervall_ms))) {
+	if (gps_read && (((act_milli - starttime_GPS) > sampletime_GPS_ms) || ((act_milli - starttime) > sending_interval_ms))) {
 		debug_out(F("Call sensorGPS"), DEBUG_MAX_INFO, 1);
 		result_GPS = sensorGPS();			// getting GPS coordinates
 		starttime_GPS = act_milli;
