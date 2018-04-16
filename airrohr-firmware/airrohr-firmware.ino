@@ -232,7 +232,7 @@ LiquidCrystal_I2C lcd_3f(0x3F, 16, 2);
 /* SDS011 declarations                                           *
 /*****************************************************************/
 #if defined(ESP8266)
-SoftwareSerial serialSDS(SDS_PIN_RX, SDS_PIN_TX, false, 128, 1408);
+SoftwareSerial serialSDS(SDS_PIN_RX, SDS_PIN_TX, false, 192);
 SoftwareSerial serialGPS(GPS_PIN_RX, GPS_PIN_TX, false, 128);
 Sds011Async< SoftwareSerial > sds011(serialSDS);
 #endif
