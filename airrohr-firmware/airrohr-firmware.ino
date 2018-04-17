@@ -2134,14 +2134,12 @@ String sensorSDS() {
 		while (is_SDS_running) {
 			stop_SDS();
 			if (!--retry) { break; }
-			delay(100);
 		}
 	} else {
 		int retry = 3;
 		while (!is_SDS_running) {
 			start_SDS();
 			if (!--retry) { break; }
-			delay(100);
 		}
 	}
 	if (send_now) {
@@ -2170,7 +2168,6 @@ String sensorSDS() {
 			while (is_SDS_running) {
 				stop_SDS();
 				if (!--retry) { break; }
-				delay(100);
 			}
 		}
 	}
@@ -2834,14 +2831,12 @@ void setup() {
 		int retry = 3;
 		while (!continuous_mode_SDS()) {
 			if (!--retry) { break; }
-			delay(100);
 		}
 		debug_out(F("Stoppe SDS011..."), DEBUG_MIN_INFO, 1);
 		retry = 3;
 		while (is_SDS_running) {
 			stop_SDS();
 			if (!--retry) { break; }
-			delay(100);
 		}
 		sds011.on_query_data_auto([](int pm25_serial, int pm10_serial) {
 			debug_out(F("Handling SDS011 data"), DEBUG_MED_INFO, 1);
