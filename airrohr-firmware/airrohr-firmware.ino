@@ -2733,11 +2733,10 @@ void HandleOTA() {
 /*****************************************************************/
 void setup() {
 #if defined(ESP8266)
+	Serial.begin(9600);				// Output to Serial at 9600 baud
 #if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
-	Wire.begin(SDA, SCL);
-	Serial.begin(115200);				// Output to Serial at 115200 baud
+	Wire.begin();
 #else
-	Serial.begin(9600);					// Output to Serial at 9600 baud
 	Wire.begin(D3, D4);
 #endif
 	esp_chipid = String(ESP.getChipId());
