@@ -1601,8 +1601,6 @@ bool endWifiConfig() {
 		ESP.restart();
 	}
 
-	yield();
-
 	debug_out(F("Connecting to "), DEBUG_MIN_INFO, 0);
 	debug_out(wlanssid, DEBUG_MIN_INFO, 1);
 
@@ -1730,9 +1728,6 @@ void sendData(const String& data, const int pin, const char* host, const int htt
 
 	debug_out(F("End connecting to "), DEBUG_MIN_INFO, 0);
 	debug_out(host, DEBUG_MIN_INFO, 1);
-
-	wdt_reset(); // nodemcu is alive
-	yield();
 #endif
 }
 
@@ -2625,7 +2620,6 @@ void display_values(const String& value_DHT_T, const String& value_DHT_H, const 
 		lcd_3f.print("T/H:" + t_value + char(223) + "C " + h_value + "%");
 	}
 #endif
-	yield();
 #endif
 }
 
@@ -3015,7 +3009,6 @@ void loop() {
 		debug_out(F("------"), DEBUG_MIN_INFO, 1);
 
 		server.handleClient();
-		yield();
 		if (ppd_read) {
 			data += result_PPD;
 			if (send2dusti) {
