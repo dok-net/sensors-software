@@ -2739,13 +2739,13 @@ void setup() {
 #if defined(ARDUINO_SAMD_ZERO)
 	Wire.begin();
 #endif
-	init_display();
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
-	init_lcd1602();
-#endif
 	copyExtDef();
 	display_debug(F("Reading config from SPIFFS"));
 	readConfig();
+	if (has_display) init_display();
+#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+	init_lcd1602();
+#endif
 	display_debug("Connecting to " + String(wlanssid));
 	connectWifi();						// Start ConnectWifi
 	setup_webserver();
