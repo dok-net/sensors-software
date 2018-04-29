@@ -1731,7 +1731,6 @@ void sendData(const String& data, const int pin, const char* host, const int htt
 	debug_out(F("End connecting to "), DEBUG_MIN_INFO, 0);
 	debug_out(host, DEBUG_MIN_INFO, 1);
 
-	wdt_reset(); // nodemcu is alive
 	yield();
 #endif
 }
