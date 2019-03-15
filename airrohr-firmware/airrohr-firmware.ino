@@ -220,8 +220,10 @@ RHReliableDatagram manager(rf69, CLIENT_ADDRESS);
 /* Display definitions                                           *
 /*****************************************************************/
 #if defined(ESP8266)
+#define SCREEN_WIDTH 64 // OLED display width, in pixels
+#define SCREEN_HEIGHT 48 // OLED display height, in pixels
 #define OLED_RESET 0  // GPIO0
-Adafruit_SSD1306 display(OLED_RESET);
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #endif
 #if defined(ESP8266) and not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
 LiquidCrystal_I2C lcd_27(0x27, 16, 2);
