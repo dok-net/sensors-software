@@ -697,19 +697,19 @@ void readConfig() {
 				std::unique_ptr<char[]> buf(new char[size]);
 
 				configFile.readBytes(buf.get(), size);
-				StaticJsonBuffer<2000> jsonBuffer;
-				JsonObject& json = jsonBuffer.parseObject(buf.get());
-				json.printTo(json_string);
+				StaticJsonDocument<2000> jsonBuffer;
+				DeserializationError error = deserializeJson(jsonBuffer, buf.get(), size);
+				serializeJsonPretty(jsonBuffer, json_string);
 				debug_out(F("File content: "), DEBUG_MAX_INFO, 0);
 				debug_out(String(buf.get()), DEBUG_MAX_INFO, 1);
 				debug_out(F("JSON Buffer content: "), DEBUG_MAX_INFO, 0);
 				debug_out(json_string, DEBUG_MAX_INFO, 1);
-				if (json.success()) {
+				if (!error) {
 					debug_out(F("parsed json..."), DEBUG_MIN_INFO, 1);
-					if (json.containsKey("SOFTWARE_VERSION")) { strcpy(version_from_local_config, json["SOFTWARE_VERSION"]); }
+					if (!jsonBuffer["SOFTWARE_VERSION"].isNull()) { strcpy(version_from_local_config, jsonBuffer["SOFTWARE_VERSION"]); }
 
-#define setFromJSON(key)    if (json.containsKey(#key)) key = json[#key];
-#define strcpyFromJSON(key) if (json.containsKey(#key)) strcpy(key, json[#key]);
+#define setFromJSON(key)    if (!jsonBuffer[#key].isNull()) key = jsonBuffer[#key];
+#define strcpyFromJSON(key) if (!jsonBuffer[#key].isNull()) strcpy(key, jsonBuffer[#key]);
 					strcpyFromJSON(current_lang);
 					strcpyFromJSON(wlanssid);
 					strcpyFromJSON(wlanpwd);
@@ -1840,22 +1840,24 @@ void send_lora(const String& data) {
 /*****************************************************************/
 String create_influxdb_string(const String& data) {
 	String tmp_str;
-	String data_4_influxdb;
+	String data_4_influxdb = "";
 	debug_out(F("Parse JSON for influx DB"), DEBUG_MIN_INFO, 1);
 	debug_out(data, DEBUG_MIN_INFO, 1);
-	StaticJsonBuffer<2000> jsonBuffer;
-	JsonObject& json2data = jsonBuffer.parseObject(data);
-	if (json2data.success()) {
-		data_4_influxdb = "";
+	StaticJsonDocument<2000> jsonBuffer;
+	DeserializationError error = deserializeJson(jsonBuffer, data);
+	if (!error) {
 		data_4_influxdb += F("feinstaub,node=esp8266-");
 		data_4_influxdb += esp_chipid + " ";
-		for (int i = 0; i < json2data["sensordatavalues"].size() - 1; i++) {
-			tmp_str = jsonBuffer.strdup(json2data["sensordatavalues"][i]["value_type"].as<char*>());
-			data_4_influxdb += tmp_str + "=";
-			tmp_str = jsonBuffer.strdup(json2data["sensordatavalues"][i]["value"].as<char*>());
-			data_4_influxdb += tmp_str;
-			if (i < (json2data["sensordatavalues"].size() - 2)) { data_4_influxdb += ","; }
+		for (uint8_t i = 0; i < jsonBuffer["sensordatavalues"].size(); i++) {
+			data_4_influxdb += jsonBuffer["sensordatavalues"][i]["value_type"].as<char*>();
+			data_4_influxdb += "=";
+			data_4_influxdb += jsonBuffer["sensordatavalues"][i]["value"].as<char*>();
+			data_4_influxdb += ",";
 		}
+		if ((unsigned)(data_4_influxdb.lastIndexOf(',') + 1) == data_4_influxdb.length()) {
+			data_4_influxdb.remove(data_4_influxdb.length() - 1);
+		}
+
 		data_4_influxdb += "\n";
 	} else {
 		debug_out(F("Data read failed"), DEBUG_ERROR, 1);
@@ -1872,17 +1874,17 @@ void send_csv(const String& data) {
 	String headline;
 	String valueline;
 	int value_count = 0;
-	StaticJsonBuffer<1000> jsonBuffer;
-	JsonObject& json2data = jsonBuffer.parseObject(data);
+	StaticJsonDocument<1000> jsonBuffer;
+	DeserializationError error = deserializeJson(jsonBuffer, data);
 	debug_out(F("CSV Output"), DEBUG_MIN_INFO, 1);
 	debug_out(data, DEBUG_MIN_INFO, 1);
-	if (json2data.success()) {
+	if (!error) {
 		headline = F("Timestamp_ms;");
 		valueline = String(act_milli) + ";";
-		for (int i = 0; i < json2data["sensordatavalues"].size(); i++) {
-			tmp_str = jsonBuffer.strdup(json2data["sensordatavalues"][i]["value_type"].as<char*>());
+		for (int i = 0; i < jsonBuffer["sensordatavalues"].size(); i++) {
+			tmp_str = jsonBuffer["sensordatavalues"][i]["value_type"].as<char*>();
 			headline += tmp_str + ";";
-			tmp_str = jsonBuffer.strdup(json2data["sensordatavalues"][i]["value"].as<char*>());
+			tmp_str = jsonBuffer["sensordatavalues"][i]["value"].as<char*>();
 			valueline += tmp_str + ";";
 		}
 		if (first_csv_line) {
