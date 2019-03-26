@@ -2736,7 +2736,7 @@ void HandleOTA() {
 /*****************************************************************/
 void setup() {
 #if defined(ESP8266)
-	Serial.begin(9600);				// Output to Serial at 9600 baud
+	Serial.begin(115200);
 #if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
 	Wire.begin();
 #else
