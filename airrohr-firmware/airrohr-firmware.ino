@@ -99,10 +99,10 @@
 #endif
 #include <ArduinoJson.h>
 #include <Sds011.h>
-#include <DHT.h>
 #include <Adafruit_BME280.h>
 #include <Adafruit_BMP280.h>
 #if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#include <DHT.h>
 #include <SparkFunHTU21D.h>
 #include <Adafruit_BMP085.h>
 #include <LiquidCrystal_I2C.h>
@@ -143,7 +143,7 @@ bool www_basicauth_enabled = 0;
 
 char version_from_local_config[30] = "";
 
-bool dht_read = 1;
+bool dht_read = 0;
 bool htu21d_read = 0;
 bool ppd_read = 0;
 bool sds_read = 1;
@@ -241,12 +241,12 @@ Sds011Async< SoftwareSerial > sds011(serialSDS);
 #if defined(ARDUINO_SAMD_ZERO)
 #define serialSDS SERIAL_PORT_HARDWARE
 #endif
+#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
 /*****************************************************************
 /* DHT declaration                                               *
 /*****************************************************************/
 DHT dht(DHT_PIN, DHT_TYPE);
 
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
 /*****************************************************************
 /* HTU21D declaration                                            *
 /*****************************************************************/
@@ -1915,6 +1915,7 @@ String sensorDHT() {
 	last_value_DHT_T = "";
 	last_value_DHT_H = "";
 
+#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
 	while ((i++ < 5) && (s == "")) {
 		h = dht.readHumidity(); //Read Humidity
 		t = dht.readTemperature(); //Read Temperature
@@ -1940,6 +1941,7 @@ String sensorDHT() {
 	}
 	debug_out(F("------"), DEBUG_MIN_INFO, 1);
 
+	#endif
 	debug_out(F("End reading DHT11/22"), DEBUG_MED_INFO, 1);
 
 	return s;
@@ -2137,12 +2139,14 @@ String sensorSDS() {
 		while (is_SDS_running) {
 			stop_SDS();
 			if (!--retry) { break; }
+			yield();
 		}
 	} else {
 		int retry = 3;
 		while (!is_SDS_running) {
 			start_SDS();
 			if (!--retry) { break; }
+			yield();
 		}
 	}
 	if (send_now) {
@@ -2171,6 +2175,7 @@ String sensorSDS() {
 			while (is_SDS_running) {
 				stop_SDS();
 				if (!--retry) { break; }
+				yield();
 			}
 		}
 	}
@@ -2195,81 +2200,86 @@ String sensorPMS(int msg_len) {
 	int checksum_ok = 0;
 	int position = 0;
 
-	debug_out(F("Start reading PMS"), DEBUG_MED_INFO, 1);
-	if (long(act_milli - starttime) < (long(sending_interval_ms) - long(warmup_time_SDS_ms + reading_time_SDS_ms))) {
-		if (is_PMS_running) {
-			stop_PMS();
+	if (pms24_read || pms32_read) {
+		debug_out(F("Start reading PMS"), DEBUG_MED_INFO, 1);
+		if (long(act_milli - starttime) < (long(sending_interval_ms) - long(warmup_time_SDS_ms + reading_time_SDS_ms))) {
+			if (is_PMS_running) {
+				stop_PMS();
+			}
 		}
-	} else {
-		if (! is_PMS_running) {
-			start_PMS();
-		}
+		else {
+			if (!is_PMS_running) {
+				start_PMS();
+			}
 
-		while (serialSDS.available() > 0) {
-			buffer = serialSDS.read();
-			debug_out(String(len) + " - " + String(buffer, DEC) + " - " + String(buffer, HEX) + " - " + int(buffer) + " .", DEBUG_MAX_INFO, 1);
-//			"aa" = 170, "ab" = 171, "c0" = 192
-			value = int(buffer);
-			switch (len) {
-			case (0): if (value != 66) { len = -1; }; break;
-			case (1): if (value != 77) { len = -1; }; break;
-			case (2): checksum_is = value; break;
-			case (3): checksum_is += value; break;
-			case (4): checksum_is += value; break;
-			case (5): checksum_is += value; break;
-			case (6): checksum_is += value; break;
-			case (7): checksum_is += value; break;
-			case (8): checksum_is += value; break;
-			case (9): checksum_is += value; break;
-			case (10): pm1_serial += ( value << 8); checksum_is += value; break;
-			case (11): pm1_serial += value; checksum_is += value; break;
-			case (12): pm25_serial = ( value << 8); checksum_is += value; break;
-			case (13): pm25_serial += value; checksum_is += value; break;
-			case (14): pm10_serial = ( value << 8); checksum_is += value; break;
-			case (15): pm10_serial += value; checksum_is += value; break;
-			case (16): checksum_is += value; break;
-			case (17): checksum_is += value; break;
-			case (18): checksum_is += value; break;
-			case (19): checksum_is += value; break;
-			case (20): checksum_is += value; break;
-			case (21): checksum_is += value; break;
-			case (22): if (msg_len == 24) { checksum_should = ( value << 8 ); } else { checksum_is += value; }; break;
-			case (23): if (msg_len == 24) { checksum_should += value; } else { checksum_is += value; }; break;
-			case (24): checksum_is += value; break;
-			case (25): checksum_is += value; break;
-			case (26): checksum_is += value; break;
-			case (27): checksum_is += value; break;
-			case (28): checksum_is += value; break;
-			case (29): checksum_is += value; break;
-			case (30): checksum_should = ( value << 8 ); break;
-			case (31): checksum_should += value; break;
-			}
-			len++;
-			if (len == msg_len) {
-				debug_out(F("Checksum is: "), DEBUG_MED_INFO, 0); debug_out(String(checksum_is + 143), DEBUG_MED_INFO, 0);
-				debug_out(F(" - should: "), DEBUG_MED_INFO, 0); debug_out(String(checksum_should), DEBUG_MED_INFO, 1);
-				if (checksum_should == (checksum_is + 143)) { checksum_ok = 1; } else { len = 0; };
-			}
-			if (len == msg_len && checksum_ok == 1 && (long(act_milli - starttime) > (long(sending_interval_ms) - long(reading_time_SDS_ms)))) {
-				if ((! isnan(pm1_serial)) && (! isnan(pm10_serial)) && (! isnan(pm25_serial))) {
-					pms_pm1_sum += pm1_serial;
-					pms_pm10_sum += pm10_serial;
-					pms_pm25_sum += pm25_serial;
-					if (pms_pm1_min > pm10_serial) { pms_pm1_min = pm1_serial; }
-					if (pms_pm1_max < pm10_serial) { pms_pm1_max = pm1_serial; }
-					if (pms_pm10_min > pm10_serial) { pms_pm10_min = pm10_serial; }
-					if (pms_pm10_max < pm10_serial) { pms_pm10_max = pm10_serial; }
-					if (pms_pm25_min > pm25_serial) { pms_pm25_min = pm25_serial; }
-					if (pms_pm25_max < pm25_serial) { pms_pm25_max = pm25_serial; }
-					debug_out(F("PM1 (sec.): "), DEBUG_MED_INFO, 0); debug_out(Float2String(float(pm1_serial)), DEBUG_MED_INFO, 1);
-					debug_out(F("PM2.5 (sec.): "), DEBUG_MED_INFO, 0); debug_out(Float2String(float(pm25_serial)), DEBUG_MED_INFO, 1);
-					debug_out(F("PM10 (sec.) : "), DEBUG_MED_INFO, 0); debug_out(Float2String(float(pm10_serial)), DEBUG_MED_INFO, 1);
-					pms_val_count++;
+			while (serialSDS.available() > 0) {
+				buffer = serialSDS.read();
+				debug_out(String(len) + " - " + String(buffer, DEC) + " - " + String(buffer, HEX) + " - " + int(buffer) + " .", DEBUG_MAX_INFO, 1);
+				//			"aa" = 170, "ab" = 171, "c0" = 192
+				value = int(buffer);
+				switch (len) {
+				case (0): if (value != 66) { len = -1; }; break;
+				case (1): if (value != 77) { len = -1; }; break;
+				case (2): checksum_is = value; break;
+				case (3): checksum_is += value; break;
+				case (4): checksum_is += value; break;
+				case (5): checksum_is += value; break;
+				case (6): checksum_is += value; break;
+				case (7): checksum_is += value; break;
+				case (8): checksum_is += value; break;
+				case (9): checksum_is += value; break;
+				case (10): pm1_serial += (value << 8); checksum_is += value; break;
+				case (11): pm1_serial += value; checksum_is += value; break;
+				case (12): pm25_serial = (value << 8); checksum_is += value; break;
+				case (13): pm25_serial += value; checksum_is += value; break;
+				case (14): pm10_serial = (value << 8); checksum_is += value; break;
+				case (15): pm10_serial += value; checksum_is += value; break;
+				case (16): checksum_is += value; break;
+				case (17): checksum_is += value; break;
+				case (18): checksum_is += value; break;
+				case (19): checksum_is += value; break;
+				case (20): checksum_is += value; break;
+				case (21): checksum_is += value; break;
+				case (22): if (msg_len == 24) { checksum_should = (value << 8); }
+						   else { checksum_is += value; }; break;
+				case (23): if (msg_len == 24) { checksum_should += value; }
+						   else { checksum_is += value; }; break;
+				case (24): checksum_is += value; break;
+				case (25): checksum_is += value; break;
+				case (26): checksum_is += value; break;
+				case (27): checksum_is += value; break;
+				case (28): checksum_is += value; break;
+				case (29): checksum_is += value; break;
+				case (30): checksum_should = (value << 8); break;
+				case (31): checksum_should += value; break;
 				}
-				len = 0; checksum_ok = 0; pm1_serial = 0.0; pm10_serial = 0.0; pm25_serial = 0.0; checksum_is = 0;
+				len++;
+				if (len == msg_len) {
+					debug_out(F("Checksum is: "), DEBUG_MED_INFO, 0); debug_out(String(checksum_is + 143), DEBUG_MED_INFO, 0);
+					debug_out(F(" - should: "), DEBUG_MED_INFO, 0); debug_out(String(checksum_should), DEBUG_MED_INFO, 1);
+					if (checksum_should == (checksum_is + 143)) { checksum_ok = 1; }
+					else { len = 0; };
+				}
+				if (len == msg_len && checksum_ok == 1 && (long(act_milli - starttime) > (long(sending_interval_ms) - long(reading_time_SDS_ms)))) {
+					if ((!isnan(pm1_serial)) && (!isnan(pm10_serial)) && (!isnan(pm25_serial))) {
+						pms_pm1_sum += pm1_serial;
+						pms_pm10_sum += pm10_serial;
+						pms_pm25_sum += pm25_serial;
+						if (pms_pm1_min > pm10_serial) { pms_pm1_min = pm1_serial; }
+						if (pms_pm1_max < pm10_serial) { pms_pm1_max = pm1_serial; }
+						if (pms_pm10_min > pm10_serial) { pms_pm10_min = pm10_serial; }
+						if (pms_pm10_max < pm10_serial) { pms_pm10_max = pm10_serial; }
+						if (pms_pm25_min > pm25_serial) { pms_pm25_min = pm25_serial; }
+						if (pms_pm25_max < pm25_serial) { pms_pm25_max = pm25_serial; }
+						debug_out(F("PM1 (sec.): "), DEBUG_MED_INFO, 0); debug_out(Float2String(float(pm1_serial)), DEBUG_MED_INFO, 1);
+						debug_out(F("PM2.5 (sec.): "), DEBUG_MED_INFO, 0); debug_out(Float2String(float(pm25_serial)), DEBUG_MED_INFO, 1);
+						debug_out(F("PM10 (sec.) : "), DEBUG_MED_INFO, 0); debug_out(Float2String(float(pm10_serial)), DEBUG_MED_INFO, 1);
+						pms_val_count++;
+					}
+					len = 0; checksum_ok = 0; pm1_serial = 0.0; pm10_serial = 0.0; pm25_serial = 0.0; checksum_is = 0;
+				}
 			}
 		}
-
 	}
 	if (send_now) {
 		last_value_PMS_P0 = "";
@@ -2760,6 +2770,7 @@ void setup() {
 	setup_webserver();
 	serialSDS.begin(9600);
 	serialGPS.begin(9600);
+	debug_out(F("autoUpdate()"), DEBUG_MIN_INFO, 1);
 	autoUpdate();
 	create_basic_auth_strings();
 #if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
@@ -2767,11 +2778,11 @@ void setup() {
 #endif
 	pinMode(PPD_PIN_PM1, INPUT_PULLUP);	// Listen at the designated PIN
 	pinMode(PPD_PIN_PM2, INPUT_PULLUP);	// Listen at the designated PIN
-	dht.begin();	// Start DHT
 #if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+	dht.begin();	// Start DHT
 	htu21d.begin(); // Start HTU21D
 #endif
-	delay(10);
+	delay(10); yield();
 #if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
 	StartOTAIfRequired();
 #endif
@@ -2836,9 +2847,11 @@ void setup() {
 		}
 		debug_out(F("Stoppe SDS011..."), DEBUG_MIN_INFO, 1);
 		retry = 3;
+		yield();
 		while (is_SDS_running) {
 			stop_SDS();
 			if (!--retry) { break; }
+			yield();
 		}
 		sds011.on_query_data_auto([](int pm25_serial, int pm10_serial) {
 			debug_out(F("Handling SDS011 data"), DEBUG_MED_INFO, 1);

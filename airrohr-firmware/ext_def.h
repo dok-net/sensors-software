@@ -49,7 +49,7 @@
 #if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
 #define DHT_READ 0
 #define DHT_API_PIN 7
-#define DHT_PIN D4
+#define DHT_PIN D7
 #else
 #define DHT_READ 1
 #define DHT_API_PIN 7
