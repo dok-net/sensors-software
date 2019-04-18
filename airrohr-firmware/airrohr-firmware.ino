@@ -314,8 +314,8 @@ unsigned long diff_micro = 0;
 const unsigned long sampletime_ms = 30000;
 
 const unsigned long sampletime_SDS_ms = 1000;
-const unsigned long warmup_time_SDS_ms = 30000;
-const unsigned long reading_time_SDS_ms = 5000;
+const unsigned long warmup_time_SDS_ms = 20000;
+const unsigned long reading_time_SDS_ms = 15000;
 bool is_SDS_running = true;
 bool is_PMS_running = true;
 
@@ -331,13 +331,10 @@ long wifi_reconnect_deadline = -1;
 unsigned long last_update_attempt;
 const unsigned long pause_between_update_attempts = 86400000;
 
-int sds_pm10_sum = 0;
-int sds_pm25_sum = 0;
-int sds_val_count = 0;
-int sds_pm10_max = 0;
-int sds_pm10_min = 20000;
-int sds_pm25_max = 0;
-int sds_pm25_min = 20000;
+int sds_pm10_table[reading_time_SDS_ms / sampletime_SDS_ms - 1];
+int sds_pm25_table[reading_time_SDS_ms / sampletime_SDS_ms - 1];
+
+String result_SDS = "";
 
 int pms_pm1_sum = 0;
 int pms_pm10_sum = 0;
@@ -2131,56 +2128,39 @@ String sensorDS18B20() {
 /*****************************************************************
 /* read SDS011 sensor values                                     *
 /*****************************************************************/
-String sensorSDS() {
-	String s = "";
-
+void sensorSDS() {
 	if (long(act_milli - starttime) < (long(sending_interval_ms) - long(warmup_time_SDS_ms + reading_time_SDS_ms))) {
 		int retry = 3;
 		while (is_SDS_running) {
 			stop_SDS();
-			if (!--retry) { break; }
 			yield();
+			if (!--retry) { return; }
 		}
-	} else {
+	} else if (!is_SDS_running) {
 		int retry = 3;
 		while (!is_SDS_running) {
 			start_SDS();
-			if (!--retry) { break; }
 			yield();
+			if (!--retry) { return; }
 		}
-	}
-	if (send_now) {
-		last_value_SDS_P1 = "";
-		last_value_SDS_P2 = "";
-		if (sds_val_count > 2) {
-			sds_pm10_sum = sds_pm10_sum - sds_pm10_min - sds_pm10_max;
-			sds_pm25_sum = sds_pm25_sum - sds_pm25_min - sds_pm25_max;
-			sds_val_count = sds_val_count - 2;
-		}
-		if (sds_val_count > 0) {
-			debug_out("PM10:  " + Float2String(float(sds_pm10_sum) / (sds_val_count * 10.0)), DEBUG_MIN_INFO, 1);
-			debug_out("PM2.5: " + Float2String(float(sds_pm25_sum) / (sds_val_count * 10.0)), DEBUG_MIN_INFO, 1);
-			debug_out("------", DEBUG_MIN_INFO, 1);
-			last_value_SDS_P1 = Float2String(float(sds_pm10_sum) / (sds_val_count * 10.0));
-			last_value_SDS_P2 = Float2String(float(sds_pm25_sum) / (sds_val_count * 10.0));
-			s += Value2Json("SDS_P1", last_value_SDS_P1);
-			s += Value2Json("SDS_P2", last_value_SDS_P2);
-			last_value_SDS_P1.remove(last_value_SDS_P1.length() - 1);
-			last_value_SDS_P2.remove(last_value_SDS_P2.length() - 1);
-		}
-		sds_pm10_sum = 0; sds_pm25_sum = 0; sds_val_count = 0;
-		sds_pm10_max = 0; sds_pm10_min = 20000; sds_pm25_max = 0; sds_pm25_min = 20000;
-		if ((sending_interval_ms > (warmup_time_SDS_ms + reading_time_SDS_ms))) {
-			int retry = 3;
-			while (is_SDS_running) {
-				stop_SDS();
-				if (!--retry) { break; }
-				yield();
+		sds011.query_data_auto_async(sizeof(sds_pm25_table)/sizeof(sds_pm25_table[0]), sds_pm25_table, sds_pm10_table);
+		sds011.on_query_data_auto_completed([](int n) {
+			int pm25;
+			int pm10;
+			if (sds011.filter_data(n, sds_pm25_table, sds_pm10_table, pm25, pm10) &&
+				!isnan(pm10) && !isnan(pm25)) {
+				debug_out("PM10:  " + Float2String(float(pm10) / 10.0), DEBUG_MIN_INFO, 1);
+				debug_out("PM2.5: " + Float2String(float(pm25) / 10.0), DEBUG_MIN_INFO, 1);
+				debug_out("------", DEBUG_MIN_INFO, 1);
+				last_value_SDS_P1 = Float2String(float(pm10) / 10.0);
+				last_value_SDS_P2 = Float2String(float(pm25) / 10.0);
+				result_SDS = Value2Json("SDS_P1", last_value_SDS_P1);
+				result_SDS += Value2Json("SDS_P2", last_value_SDS_P2);
+				last_value_SDS_P1.remove(last_value_SDS_P1.length() - 1);
+				last_value_SDS_P2.remove(last_value_SDS_P2.length() - 1);
 			}
-		}
+		});
 	}
-
-	return s;
 }
 
 /*****************************************************************
@@ -2850,24 +2830,10 @@ void setup() {
 		yield();
 		while (is_SDS_running) {
 			stop_SDS();
-			if (!--retry) { break; }
 			yield();
+			if (!--retry) { break; }
 		}
-		sds011.on_query_data_auto([](int pm25_serial, int pm10_serial) {
-			debug_out(F("Handling SDS011 data"), DEBUG_MED_INFO, 1);
-			if ((!isnan(pm10_serial)) && (!isnan(pm25_serial))) {
-				sds_pm10_sum += pm10_serial;
-				sds_pm25_sum += pm25_serial;
-				if (sds_pm10_min > pm10_serial) { sds_pm10_min = pm10_serial; }
-				if (sds_pm10_max < pm10_serial) { sds_pm10_max = pm10_serial; }
-				if (sds_pm25_min > pm25_serial) { sds_pm25_min = pm25_serial; }
-				if (sds_pm25_max < pm25_serial) { sds_pm25_max = pm25_serial; }
-				debug_out(F("PM10 (sec.) : "), DEBUG_MED_INFO, 0); debug_out(Float2String(float(pm10_serial) / 10), DEBUG_MED_INFO, 1);
-				debug_out(F("PM2.5 (sec.): "), DEBUG_MED_INFO, 0); debug_out(Float2String(float(pm25_serial) / 10), DEBUG_MED_INFO, 1);
-				sds_val_count++;
-			}
-			debug_out(F("End handling SDS011 data"), DEBUG_MED_INFO, 1);
-		});
+		sds011.set_data_rampup(warmup_time_SDS_ms / 1000);
 	}
 	if (pms24_read || pms32_read) {
 		debug_out(F("Stoppe PMS..."), DEBUG_MIN_INFO, 1);
@@ -2905,7 +2871,6 @@ void loop() {
 	String sensemap_path = "";
 
 	String result_PPD = "";
-	String result_SDS = "";
 	String result_PMS = "";
 	String result_DHT = "";
 	String result_HTU21D = "";
@@ -2947,7 +2912,7 @@ void loop() {
 	if (((act_milli - starttime_SDS) > sampletime_SDS_ms) || ((act_milli - starttime) > sending_interval_ms)) {
 		if (sds_read) {
 			debug_out(F("Call sensorSDS"), DEBUG_MAX_INFO, 1);
-			result_SDS = sensorSDS();
+			sensorSDS();
 			starttime_SDS = act_milli;
 		}
 
@@ -3219,7 +3184,8 @@ void loop() {
 
 	if (config_needs_write) { writeConfig(); create_basic_auth_strings(); }
 
-	serialSDS.perform_work();
+	yield();
+	sds011.perform_work();
 
 #if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
 	HandleOTA();
