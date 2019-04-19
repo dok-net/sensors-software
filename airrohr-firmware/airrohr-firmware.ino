@@ -2143,7 +2143,6 @@ void sensorSDS() {
 			yield();
 			if (!--retry) { return; }
 		}
-		sds011.query_data_auto_async(sizeof(sds_pm25_table)/sizeof(sds_pm25_table[0]), sds_pm25_table, sds_pm10_table);
 		sds011.on_query_data_auto_completed([](int n) {
 			int pm25;
 			int pm10;
@@ -2160,6 +2159,7 @@ void sensorSDS() {
 				last_value_SDS_P2.remove(last_value_SDS_P2.length() - 1);
 			}
 		});
+		sds011.query_data_auto_async(sizeof(sds_pm25_table) / sizeof(sds_pm25_table[0]), sds_pm25_table, sds_pm10_table);
 	}
 }
 
