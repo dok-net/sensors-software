@@ -75,7 +75,6 @@
 /* Includes                                                      *
 /*****************************************************************/
 #if defined(ESP8266)
-#include <FS.h>                     // must be first
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
@@ -83,13 +82,16 @@
 #include <WiFiUdp.h>
 #include <ESP8266httpUpdate.h>
 #include <WiFiClientSecure.h>
+#include <ESP8266HTTPClient.h>
+#endif
+#if defined(ESP8266) || defined(ESP32)
+#include <FS.h>                     // must be first
 #include <SoftwareSerial.h>
 #include <base64.h>
 #include <Wire.h>
-#include <ESP8266HTTPClient.h>
 #include <Adafruit_SSD1306.h>
 #endif
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
 #include <ArduinoOTA.h>
 #endif
 #if defined(ARDUINO_SAMD_ZERO)
@@ -101,7 +103,7 @@
 #include <Sds011.h>
 #include <Adafruit_BME280.h>
 #include <Adafruit_BMP280.h>
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI)  || defined(ARDUINO_MINI32))
 #include <DHT.h>
 #include <SparkFunHTU21D.h>
 #include <Adafruit_BMP085.h>
@@ -219,13 +221,13 @@ RHReliableDatagram manager(rf69, CLIENT_ADDRESS);
 /*****************************************************************
 /* Display definitions                                           *
 /*****************************************************************/
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 #define SCREEN_WIDTH 64 // OLED display width, in pixels
 #define SCREEN_HEIGHT 48 // OLED display height, in pixels
 #define OLED_RESET 0  // GPIO0
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #endif
-#if defined(ESP8266) and not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if (defined(ESP8266) || defined(ESP32)) and not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 LiquidCrystal_I2C lcd_27(0x27, 16, 2);
 LiquidCrystal_I2C lcd_3f(0x3F, 16, 2);
 #endif
@@ -233,7 +235,7 @@ LiquidCrystal_I2C lcd_3f(0x3F, 16, 2);
 /*****************************************************************
 /* SDS011 declarations                                           *
 /*****************************************************************/
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 SoftwareSerial serialSDS;
 SoftwareSerial serialGPS;
 Sds011Async< SoftwareSerial > sds011(serialSDS);
@@ -241,7 +243,7 @@ Sds011Async< SoftwareSerial > sds011(serialSDS);
 #if defined(ARDUINO_SAMD_ZERO)
 #define serialSDS SERIAL_PORT_HARDWARE
 #endif
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 /*****************************************************************
 /* DHT declaration                                               *
 /*****************************************************************/
@@ -269,7 +271,7 @@ Adafruit_BMP280 bmp280;
 /*****************************************************************/
 Adafruit_BME280 bme280;
 
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 /*****************************************************************
 /* DS18B20 declaration                                            *
 /*****************************************************************/
@@ -280,7 +282,7 @@ DallasTemperature ds18b20(&oneWire);
 /*****************************************************************
 /* GPS declaration                                               *
 /*****************************************************************/
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI) && (defined(ARDUINO_SAMD_ZERO) || defined(ESP8266))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)) && (defined(ARDUINO_SAMD_ZERO) || defined(ESP8266) || defined(ESP32))
 TinyGPSPlus gps;
 #endif
 
@@ -410,7 +412,7 @@ void debug_out(const String& text, const int level, const bool linebreak) {
 /* display values                                                *
 /*****************************************************************/
 void display_debug(const String& text) {
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 	if (has_display) {
 		debug_out(F("output debug text to display..."), DEBUG_MIN_INFO, 1);
 		debug_out(text, DEBUG_MAX_INFO, 1);
@@ -438,7 +440,7 @@ String IPAddress2String(const IPAddress& ipaddress) {
 /*****************************************************************
 /* dtostrf for Arduino feather                                   *
 /*****************************************************************/
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || (defined(ARDUINO_SAMD_ZERO) && defined(SERIAL_PORT_USBVIRTUAL))
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32) || (defined(ARDUINO_SAMD_ZERO) && defined(SERIAL_PORT_USBVIRTUAL))
 #if 0
 char *dtostrf (double val, signed char width, unsigned char prec, char *sout) {
 	char fmt[20];
@@ -677,7 +679,7 @@ void copyExtDef() {
 /* read config from spiffs                                       *
 /*****************************************************************/
 void readConfig() {
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 	String json_string = "";
 	debug_out(F("mounting FS..."), DEBUG_MIN_INFO, 1);
 
@@ -768,7 +770,7 @@ void readConfig() {
 /* write config to spiffs                                        *
 /*****************************************************************/
 void writeConfig() {
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 	String json_string = "";
 	debug_out(F("saving config..."), DEBUG_MIN_INFO, 1);
 
@@ -1295,7 +1297,7 @@ void webserver_wifi() {
 /* Webserver root: show latest values                            *
 /*****************************************************************/
 void webserver_values() {
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 	if (WiFi.status() != WL_CONNECTED) {
 		server.sendHeader(F("Location"), F("http://192.168.4.1/config"));
 		server.send(302, FPSTR(TXT_CONTENT_TYPE_TEXT_HTML), "");
@@ -1420,7 +1422,7 @@ void webserver_removeConfig() {
 		page_content.replace("{c}", FPSTR(INTL_ABBRECHEN));
 
 	} else {
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 		if (SPIFFS.exists("/config.json")) {	//file exists
 			debug_out(F("removing config.json..."), DEBUG_MIN_INFO, 1);
 			if (SPIFFS.remove("/config.json")) {
@@ -1454,7 +1456,7 @@ void webserver_reset() {
 		page_content.replace("{b}", FPSTR(INTL_NEU_STARTEN));
 		page_content.replace("{c}", FPSTR(INTL_ABBRECHEN));
 	} else {
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 		ESP.restart();
 #endif
 	}
@@ -1537,7 +1539,7 @@ void setup_webserver() {
 /* beginWifiConfig                                                    *
 /*****************************************************************/
 void beginWifiConfig() {
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 	const char *softAP_password = "";
 	const byte DNS_PORT = 53;
 	IPAddress apIP(192, 168, 4, 1);
@@ -1564,7 +1566,7 @@ void beginWifiConfig() {
 /* endWifiConfig                                                    *
 /*****************************************************************/
 bool endWifiConfig() {
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 	int retry_count = 0;
 	if (!is_wificonfig) { return true; }
 	// 10 minutes timeout for wifi config
@@ -1618,7 +1620,7 @@ void connectWifi() {
 	server_name = F("Feinstaubsensor-");
 	server_name += esp_chipid;
 
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 	int retry_count = 0;
 	debug_out(String(WiFi.status()), DEBUG_MIN_INFO, 1);
 	WiFi.mode(WIFI_STA);
@@ -1645,7 +1647,7 @@ void connectWifi() {
 /* send data to rest api                                         *
 /*****************************************************************/
 void sendData(const String& data, const int pin, const char* host, const int httpPort, const char* url, const char* basic_auth_string, const String& contentType) {
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 
 	debug_out(F("Start connecting to "), DEBUG_MIN_INFO, 0);
 	debug_out(host, DEBUG_MIN_INFO, 1);
@@ -1912,7 +1914,7 @@ String sensorDHT() {
 	last_value_DHT_T = "";
 	last_value_DHT_H = "";
 
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 	while ((i++ < 5) && (s == "")) {
 		h = dht.readHumidity(); //Read Humidity
 		t = dht.readTemperature(); //Read Temperature
@@ -1944,7 +1946,7 @@ String sensorDHT() {
 	return s;
 }
 
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 /*****************************************************************
 /* read HTU21D sensor values                                     *
 /*****************************************************************/
@@ -2087,7 +2089,7 @@ String sensorBME280() {
 	return s;
 }
 
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 /*****************************************************************
 /* read DS18B20 sensor values                                    *
 /*****************************************************************/
@@ -2383,13 +2385,13 @@ String sensorPPD() {
 	return s;
 }
 
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 /*****************************************************************
 /* read GPS sensor values                                        *
 /*****************************************************************/
 String sensorGPS() {
 	String s = "";
-#if defined(ARDUINO_SAMD_ZERO) || defined(ESP8266)
+#if defined(ARDUINO_SAMD_ZERO) || defined(ESP8266) || defined(ESP32)
 	String gps_lat = "";
 	String gps_lng = "";
 	String gps_alt = "";
@@ -2477,7 +2479,7 @@ String sensorGPS() {
 /* AutoUpdate                                                    *
 /*****************************************************************/
 void autoUpdate() {
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 	String SDS_version = "";
 	if (auto_update) {
 		debug_out(F("Starting OTA update ..."), DEBUG_MIN_INFO, 1);
@@ -2513,7 +2515,7 @@ void autoUpdate() {
 /* display values                                                *
 /*****************************************************************/
 void display_values(const String& value_DHT_T, const String& value_DHT_H, const String& value_BMP_T, const String& value_BMP_P, const String& value_BMP280_T, const String& value_BMP280_P, const String& value_BME280_T, const String& value_BME280_H, const String& value_BME280_P, const String& value_PPD_P1, const String& value_PPD_P2, const String& value_SDS_P1, const String& value_SDS_P2) {
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 	int value_count = 0;
 	String t_value = "";
 	String h_value = "";
@@ -2582,7 +2584,7 @@ void display_values(const String& value_DHT_T, const String& value_DHT_H, const 
 			display.setCursor(0, 10 * (value_count++));
 			display.print("P10: " + value_SDS_P1);
 		}
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 		if (gps_read) {
 			if (gps.location.isValid()) {
 				display.setCursor(0, 10 * (value_count++));
@@ -2602,7 +2604,7 @@ void display_values(const String& value_DHT_T, const String& value_DHT_H, const 
 // T/H: -10.0°C/100.0%
 // T/P: -10.0°C/1000hPa
 
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 	if (has_lcd1602_27) {
 		lcd_27.clear();
 		lcd_27.setCursor(0, 0);
@@ -2626,7 +2628,7 @@ void display_values(const String& value_DHT_T, const String& value_DHT_H, const 
 /* Init display                                                  *
 /*****************************************************************/
 void init_display() {
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 	// by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
 	display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 64x48)
 	display.display();
@@ -2634,12 +2636,12 @@ void init_display() {
 #endif
 }
 
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 /*****************************************************************
 /* Init display                                                  *
 /*****************************************************************/
 void init_lcd1602() {
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 	lcd_27.init();
 	lcd_27.backlight();
 	lcd_3f.init();
@@ -2680,7 +2682,7 @@ bool initBME280(char addr) {
 	}
 }
 
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
 bool ota_started = false;
 
 void StartOTAIfRequired() {
@@ -2725,9 +2727,9 @@ void HandleOTA() {
 /* The Setup                                                     *
 /*****************************************************************/
 void setup() {
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 	Serial.begin(115200);
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
 	Wire.begin();
 #else
 	Wire.begin(D3, D4);
@@ -2742,7 +2744,7 @@ void setup() {
 	display_debug(F("Reading config from SPIFFS"));
 	readConfig();
 	if (has_display) init_display();
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 	init_lcd1602();
 #endif
 	display_debug("Connecting to " + String(wlanssid));
@@ -2753,20 +2755,20 @@ void setup() {
 	debug_out(F("autoUpdate()"), DEBUG_MIN_INFO, 1);
 	autoUpdate();
 	create_basic_auth_strings();
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 	ds18b20.begin();
 #endif
 	pinMode(PPD_PIN_PM1, INPUT_PULLUP);	// Listen at the designated PIN
 	pinMode(PPD_PIN_PM2, INPUT_PULLUP);	// Listen at the designated PIN
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 	dht.begin();	// Start DHT
 	htu21d.begin(); // Start HTU21D
 #endif
 	delay(10); yield();
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
 	StartOTAIfRequired();
 #endif
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 	debug_out(F("\nChipId: "), DEBUG_MIN_INFO, 0);
 	debug_out(esp_chipid, DEBUG_MIN_INFO, 1);
 #endif
@@ -2804,7 +2806,7 @@ void setup() {
 	if (auto_update) { debug_out(F("Auto-Update wird ausgeführt..."), DEBUG_MIN_INFO, 1); }
 	if (has_display) { debug_out(F("Zeige auf Display..."), DEBUG_MIN_INFO, 1); }
 	if (has_lcd1602) { debug_out(F("Zeige auf LCD 1602..."), DEBUG_MIN_INFO, 1); }
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 	if (bmp_read) {
 		if (!bmp.begin()) {
 			debug_out(F("No valid BMP085 sensor, check wiring!"), DEBUG_MIN_INFO, 1);
@@ -2937,7 +2939,7 @@ void loop() {
 			result_DHT = sensorDHT();			// getting temperature and humidity (optional)
 		}
 
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 		if (htu21d_read) {
 			debug_out(F("Call sensorHTU21D"), DEBUG_MAX_INFO, 1);
 			result_HTU21D = sensorHTU21D();			// getting temperature and humidity (optional)
@@ -2959,7 +2961,7 @@ void loop() {
 			result_BME280 = sensorBME280();			// getting temperature, humidity and pressure (optional)
 		}
 
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 		if (ds18b20_read) {
 			debug_out(F("Call sensorDS18B20"), DEBUG_MAX_INFO, 1);
 			result_DS18B20 = sensorDS18B20();     // getting temperature (optional)
@@ -2967,7 +2969,7 @@ void loop() {
 #endif
 	}
 
-#if not defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
 	if (gps_read && (((act_milli - starttime_GPS) > sampletime_GPS_ms) || ((act_milli - starttime) > sending_interval_ms))) {
 		debug_out(F("Call sensorGPS"), DEBUG_MAX_INFO, 1);
 		result_GPS = sensorGPS();			// getting GPS coordinates
@@ -3187,7 +3189,7 @@ void loop() {
 	yield();
 	sds011.perform_work();
 
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
 	HandleOTA();
 #endif
 }
