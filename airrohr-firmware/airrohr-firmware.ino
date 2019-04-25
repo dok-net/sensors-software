@@ -234,8 +234,8 @@ LiquidCrystal_I2C lcd_3f(0x3F, 16, 2);
 /* SDS011 declarations                                           *
 /*****************************************************************/
 #if defined(ESP8266)
-SoftwareSerial serialSDS(SDS_PIN_RX, SDS_PIN_TX, false, 192);
-SoftwareSerial serialGPS(GPS_PIN_RX, GPS_PIN_TX, false, 128);
+SoftwareSerial serialSDS;
+SoftwareSerial serialGPS;
 Sds011Async< SoftwareSerial > sds011(serialSDS);
 #endif
 #if defined(ARDUINO_SAMD_ZERO)
@@ -2748,8 +2748,8 @@ void setup() {
 	display_debug("Connecting to " + String(wlanssid));
 	connectWifi();						// Start ConnectWifi
 	setup_webserver();
-	serialSDS.begin(9600);
-	serialGPS.begin(9600);
+	serialSDS.begin(9600, SDS_PIN_RX, SDS_PIN_TX, SWSERIAL_8N1, false, 192);
+	serialGPS.begin(9600, GPS_PIN_RX, GPS_PIN_TX, SWSERIAL_8N1, false, 128);
 	debug_out(F("autoUpdate()"), DEBUG_MIN_INFO, 1);
 	autoUpdate();
 	create_basic_auth_strings();
