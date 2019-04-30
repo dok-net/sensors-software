@@ -46,7 +46,7 @@
 
 // DHT22, Sensor Temperatur und Luftfeuchte
 #define DHT_TYPE DHT22
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32)
 #define DHT_READ 0
 #define DHT_API_PIN 7
 #define DHT_PIN D7
@@ -65,7 +65,7 @@
 // HTU21D, Sensor Temperatur und Luftfeuchte
 #define HTU21D_READ 0
 #define HTU21D_API_PIN 7
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32)
 #define HTU21D_PIN_SCL D1
 #define HTU21D_PIN_SDA D2
 #elif defined(ESP8266) || defined(ESP32)
@@ -88,9 +88,9 @@
 // TX (transmitting) pin on one side goes to RX (receiving) pin on other side
 // SoftSerial RX PIN is D1 and goes to SDS TX
 // SoftSerial TX PIN is D2 and goes to SDS RX
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
-#define SDS_PIN_RX D3
-#define SDS_PIN_TX D4
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32)
+#define SDS_PIN_RX D4
+#define SDS_PIN_TX D3
 #elif defined(ESP8266) || defined(ESP32)
 #define SDS_PIN_RX D1
 #define SDS_PIN_TX D2
@@ -104,7 +104,7 @@
 
 // all Plantower (PMS) sensors
 #define PMS_API_PIN 1
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32)
 #define PMS_PIN_RX D3
 #define PMS_PIN_TX D4
 #elif defined(ESP8266) || defined(ESP32)
@@ -115,7 +115,7 @@
 // BMP180, Luftdruck-Sensor
 #define BMP_READ 0
 #define BMP_API_PIN 3
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32)
 #define BMP_PIN_SCL D1
 #define BMP_PIN_SDA D2
 #elif defined(ESP8266) || defined(ESP32)
@@ -126,7 +126,7 @@
 // BMP280, Luftdruck-Sensor
 #define BMP280_READ 1
 #define BMP280_API_PIN 3
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32)
 #define BMP280_PIN_SCL D1
 #define BMP280_PIN_SDA D2
 #elif defined(ESP8266) || defined(ESP32)
@@ -137,7 +137,7 @@
 // BME280, Luftdruck-Sensor
 #define BME280_READ 0
 #define BME280_API_PIN 11
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32)
 #define BME280_PIN_SCL D1
 #define BME280_PIN_SDA D2
 #elif defined(ESP8266) || defined(ESP32)

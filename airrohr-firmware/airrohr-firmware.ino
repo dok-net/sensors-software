@@ -91,7 +91,7 @@
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
 #endif
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32)
 #include <ArduinoOTA.h>
 #endif
 #if defined(ARDUINO_SAMD_ZERO)
@@ -103,7 +103,7 @@
 #include <Sds011.h>
 #include <Adafruit_BME280.h>
 #include <Adafruit_BMP280.h>
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI)  || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI)  || defined(ARDUINO_D1_MINI32))
 #include <DHT.h>
 #include <SparkFunHTU21D.h>
 #include <Adafruit_BMP085.h>
@@ -227,7 +227,7 @@ RHReliableDatagram manager(rf69, CLIENT_ADDRESS);
 #define OLED_RESET 0  // GPIO0
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #endif
-#if (defined(ESP8266) || defined(ESP32)) and not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if (defined(ESP8266) || defined(ESP32)) and not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 LiquidCrystal_I2C lcd_27(0x27, 16, 2);
 LiquidCrystal_I2C lcd_3f(0x3F, 16, 2);
 #endif
@@ -243,7 +243,7 @@ Sds011Async< SoftwareSerial > sds011(serialSDS);
 #if defined(ARDUINO_SAMD_ZERO)
 #define serialSDS SERIAL_PORT_HARDWARE
 #endif
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 /*****************************************************************
 /* DHT declaration                                               *
 /*****************************************************************/
@@ -271,7 +271,7 @@ Adafruit_BMP280 bmp280;
 /*****************************************************************/
 Adafruit_BME280 bme280;
 
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 /*****************************************************************
 /* DS18B20 declaration                                            *
 /*****************************************************************/
@@ -282,7 +282,7 @@ DallasTemperature ds18b20(&oneWire);
 /*****************************************************************
 /* GPS declaration                                               *
 /*****************************************************************/
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)) && (defined(ARDUINO_SAMD_ZERO) || defined(ESP8266) || defined(ESP32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32)) && (defined(ARDUINO_SAMD_ZERO) || defined(ESP8266) || defined(ESP32))
 TinyGPSPlus gps;
 #endif
 
@@ -440,7 +440,7 @@ String IPAddress2String(const IPAddress& ipaddress) {
 /*****************************************************************
 /* dtostrf for Arduino feather                                   *
 /*****************************************************************/
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32) || (defined(ARDUINO_SAMD_ZERO) && defined(SERIAL_PORT_USBVIRTUAL))
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32) || (defined(ARDUINO_SAMD_ZERO) && defined(SERIAL_PORT_USBVIRTUAL))
 #if 0
 char *dtostrf (double val, signed char width, unsigned char prec, char *sout) {
 	char fmt[20];
@@ -1914,7 +1914,7 @@ String sensorDHT() {
 	last_value_DHT_T = "";
 	last_value_DHT_H = "";
 
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 	while ((i++ < 5) && (s == "")) {
 		h = dht.readHumidity(); //Read Humidity
 		t = dht.readTemperature(); //Read Temperature
@@ -1946,7 +1946,7 @@ String sensorDHT() {
 	return s;
 }
 
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 /*****************************************************************
 /* read HTU21D sensor values                                     *
 /*****************************************************************/
@@ -2089,7 +2089,7 @@ String sensorBME280() {
 	return s;
 }
 
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 /*****************************************************************
 /* read DS18B20 sensor values                                    *
 /*****************************************************************/
@@ -2385,7 +2385,7 @@ String sensorPPD() {
 	return s;
 }
 
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 /*****************************************************************
 /* read GPS sensor values                                        *
 /*****************************************************************/
@@ -2584,7 +2584,7 @@ void display_values(const String& value_DHT_T, const String& value_DHT_H, const 
 			display.setCursor(0, 10 * (value_count++));
 			display.print("P10: " + value_SDS_P1);
 		}
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 		if (gps_read) {
 			if (gps.location.isValid()) {
 				display.setCursor(0, 10 * (value_count++));
@@ -2604,7 +2604,7 @@ void display_values(const String& value_DHT_T, const String& value_DHT_H, const 
 // T/H: -10.0°C/100.0%
 // T/P: -10.0°C/1000hPa
 
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 	if (has_lcd1602_27) {
 		lcd_27.clear();
 		lcd_27.setCursor(0, 0);
@@ -2636,7 +2636,7 @@ void init_display() {
 #endif
 }
 
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 /*****************************************************************
 /* Init display                                                  *
 /*****************************************************************/
@@ -2682,7 +2682,7 @@ bool initBME280(char addr) {
 	}
 }
 
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32)
 bool ota_started = false;
 
 void StartOTAIfRequired() {
@@ -2729,7 +2729,7 @@ void HandleOTA() {
 void setup() {
 #if defined(ESP8266) || defined(ESP32)
 	Serial.begin(115200);
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32)
 	Wire.begin();
 #else
 	Wire.begin(D3, D4);
@@ -2744,7 +2744,7 @@ void setup() {
 	display_debug(F("Reading config from SPIFFS"));
 	readConfig();
 	if (has_display) init_display();
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 	init_lcd1602();
 #endif
 	display_debug("Connecting to " + String(wlanssid));
@@ -2755,17 +2755,17 @@ void setup() {
 	debug_out(F("autoUpdate()"), DEBUG_MIN_INFO, 1);
 	autoUpdate();
 	create_basic_auth_strings();
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 	ds18b20.begin();
 #endif
 	pinMode(PPD_PIN_PM1, INPUT_PULLUP);	// Listen at the designated PIN
 	pinMode(PPD_PIN_PM2, INPUT_PULLUP);	// Listen at the designated PIN
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 	dht.begin();	// Start DHT
 	htu21d.begin(); // Start HTU21D
 #endif
 	delay(10); yield();
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32)
 	StartOTAIfRequired();
 #endif
 #if defined(ESP8266) || defined(ESP32)
@@ -2806,7 +2806,7 @@ void setup() {
 	if (auto_update) { debug_out(F("Auto-Update wird ausgeführt..."), DEBUG_MIN_INFO, 1); }
 	if (has_display) { debug_out(F("Zeige auf Display..."), DEBUG_MIN_INFO, 1); }
 	if (has_lcd1602) { debug_out(F("Zeige auf LCD 1602..."), DEBUG_MIN_INFO, 1); }
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 	if (bmp_read) {
 		if (!bmp.begin()) {
 			debug_out(F("No valid BMP085 sensor, check wiring!"), DEBUG_MIN_INFO, 1);
@@ -2939,7 +2939,7 @@ void loop() {
 			result_DHT = sensorDHT();			// getting temperature and humidity (optional)
 		}
 
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 		if (htu21d_read) {
 			debug_out(F("Call sensorHTU21D"), DEBUG_MAX_INFO, 1);
 			result_HTU21D = sensorHTU21D();			// getting temperature and humidity (optional)
@@ -2961,7 +2961,7 @@ void loop() {
 			result_BME280 = sensorBME280();			// getting temperature, humidity and pressure (optional)
 		}
 
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 		if (ds18b20_read) {
 			debug_out(F("Call sensorDS18B20"), DEBUG_MAX_INFO, 1);
 			result_DS18B20 = sensorDS18B20();     // getting temperature (optional)
@@ -2969,7 +2969,7 @@ void loop() {
 #endif
 	}
 
-#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32))
+#if not (defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32))
 	if (gps_read && (((act_milli - starttime_GPS) > sampletime_GPS_ms) || ((act_milli - starttime) > sending_interval_ms))) {
 		debug_out(F("Call sensorGPS"), DEBUG_MAX_INFO, 1);
 		result_GPS = sensorGPS();			// getting GPS coordinates
@@ -3189,7 +3189,7 @@ void loop() {
 	yield();
 	sds011.perform_work();
 
-#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_MINI32)
+#if defined(ARDUINO_ESP8266_WEMOS_D1MINI) || defined(ARDUINO_D1_MINI32)
 	HandleOTA();
 #endif
 }
