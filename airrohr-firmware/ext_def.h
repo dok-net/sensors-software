@@ -89,8 +89,8 @@
 // SoftSerial RX PIN is D1 and goes to SDS TX
 // SoftSerial TX PIN is D2 and goes to SDS RX
 #if defined(ARDUINO_ESP8266_WEMOS_D1MINI)
-#define SDS_PIN_RX D3
-#define SDS_PIN_TX D4
+#define SDS_PIN_RX D7
+#define SDS_PIN_TX D8
 #elif defined(ESP8266)
 #define SDS_PIN_RX D1
 #define SDS_PIN_TX D2
