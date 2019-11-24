@@ -2148,8 +2148,8 @@ void sensorSDS() {
 			int pm10;
 			if (sds011.filter_data(n, sds_pm25_table, sds_pm10_table, pm25, pm10) &&
 				!isnan(pm10) && !isnan(pm25)) {
-				debug_out("PM10:  " + Float2String(float(pm10) / 10.0), DEBUG_MIN_INFO, 1);
 				debug_out("PM2.5: " + Float2String(float(pm25) / 10.0), DEBUG_MIN_INFO, 1);
+				debug_out("PM10:  " + Float2String(float(pm10) / 10.0), DEBUG_MIN_INFO, 1);
 				debug_out("------", DEBUG_MIN_INFO, 1);
 				last_value_SDS_P1 = Float2String(float(pm10) / 10.0);
 				last_value_SDS_P2 = Float2String(float(pm25) / 10.0);
