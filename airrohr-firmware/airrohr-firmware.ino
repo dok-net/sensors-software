@@ -2129,7 +2129,7 @@ String sensorDS18B20() {
 /* read SDS011 sensor values                                     *
 /*****************************************************************/
 void sensorSDS() {
-	if (long(act_milli - starttime) < (long(sending_interval_ms) - long(warmup_time_SDS_ms + reading_time_SDS_ms))) {
+	if (long(act_milli - starttime) < (long(sending_interval_ms) - long(warmup_time_SDS_ms + reading_time_SDS_ms + 1000))) {
 		int retry = 3;
 		while (is_SDS_running) {
 			stop_SDS();
@@ -2182,7 +2182,7 @@ String sensorPMS(int msg_len) {
 
 	if (pms24_read || pms32_read) {
 		debug_out(F("Start reading PMS"), DEBUG_MED_INFO, 1);
-		if (long(act_milli - starttime) < (long(sending_interval_ms) - long(warmup_time_SDS_ms + reading_time_SDS_ms))) {
+		if (long(act_milli - starttime) < (long(sending_interval_ms) - long(warmup_time_SDS_ms + reading_time_SDS_ms + 1000))) {
 			if (is_PMS_running) {
 				stop_PMS();
 			}
@@ -2240,7 +2240,7 @@ String sensorPMS(int msg_len) {
 					if (checksum_should == (checksum_is + 143)) { checksum_ok = 1; }
 					else { len = 0; };
 				}
-				if (len == msg_len && checksum_ok == 1 && (long(act_milli - starttime) > (long(sending_interval_ms) - long(reading_time_SDS_ms)))) {
+				if (len == msg_len && checksum_ok == 1 && (long(act_milli - starttime) > (long(sending_interval_ms) - long(warmup_time_SDS_ms + reading_time_SDS_ms + 1000)))) {
 					if ((!isnan(pm1_serial)) && (!isnan(pm10_serial)) && (!isnan(pm25_serial))) {
 						pms_pm1_sum += pm1_serial;
 						pms_pm10_sum += pm10_serial;
@@ -2288,7 +2288,7 @@ String sensorPMS(int msg_len) {
 		}
 		pms_pm1_sum = 0; pms_pm10_sum = 0; pms_pm25_sum = 0; pms_val_count = 0;
 		pms_pm1_max = 0; pms_pm1_min = 20000; pms_pm10_max = 0; pms_pm10_min = 20000; pms_pm25_max = 0; pms_pm25_min = 20000;
-		if ((sending_interval_ms > (warmup_time_SDS_ms + reading_time_SDS_ms))) {
+		if ((sending_interval_ms > (warmup_time_SDS_ms + reading_time_SDS_ms + 1000))) {
 			stop_PMS();
 		}
 	}
